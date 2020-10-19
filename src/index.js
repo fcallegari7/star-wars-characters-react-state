@@ -13,12 +13,23 @@ import endpoint from './endpoint';
 
 const Application = () => {
   const [characters, setCharacters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    setLoading(true);
+    setCharacters([]);
+    setError(null);
     fetch(endpoint + '/characters')
       .then((response) => response.json())
-      .then((response) => setCharacters(response.characters))
-      .catch(console.error);
+      .then((response) => {
+        setLoading(false);
+        setCharacters(response.characters);
+      })
+      .catch((error) => {
+        setLoading(false);
+        setError(error);
+      });
   }, []);
 
   return (
@@ -28,7 +39,12 @@ const Application = () => {
       </header>
       <main>
         <section className="sidebar">
-          <CharacterList characters={characters} />
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <CharacterList characters={characters} />
+          )}
+          {error && <p className="error">{error.message}</p>}
         </section>
       </main>
     </div>
