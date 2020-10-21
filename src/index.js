@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import ReactDOM from 'react-dom';
 
 import { BrowserRouter as Router } from 'react-router-dom';
@@ -11,27 +11,63 @@ import './styles.scss';
 
 import endpoint from './endpoint';
 
+const initialState = {
+  result: null,
+  loading: true,
+  error: null,
+};
+
+const fetchReducer = (state, action) => {
+  if (action.type === 'LOADING') {
+    return {
+      result: null,
+      loading: true,
+      error: null,
+    };
+  }
+  if (action.type === 'RESPONSE_COMPLETE') {
+    return {
+      result: action.payload.response,
+      loading: false,
+      error: null,
+    };
+  }
+  if (action.type === 'ERROR') {
+    return {
+      result: null,
+      loading: false,
+      error: action.payload.error,
+    };
+  }
+  return state;
+};
+
 const useFetch = (url) => {
-  const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [response, setResponse] = useState(null);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
+  const [state, dispatch] = useReducer(fetchReducer, initialState);
 
   useEffect(() => {
-    setLoading(true);
-    setResponse([]);
-    setError(null);
+    // setLoading(true);
+    // setResponse([]);
+    // setError(null);
 
+    dispatch({ type: 'LOADING' });
     //async await solutionm
     const fetchUrl = async () => {
       try {
         const response = await fetch(url);
         const data = await response.json();
-        setResponse(data);
+        // setResponse(data);
+        dispatch({ type: 'RESPONSE_COMPLETE', payload: { response: data } });
       } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
+        // setError(error);
+        dispatch({ type: 'ERROR', payload: { error } });
       }
+      // } finally {
+      //   setLoading(false);
+      // }
     };
 
     fetchUrl();
@@ -47,7 +83,7 @@ const useFetch = (url) => {
     //     setError(error);
     //   });
   }, []);
-  return [response, loading, error];
+  return [state.result, state.loading, state.error];
 };
 
 const Application = () => {
